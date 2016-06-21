@@ -42,7 +42,7 @@ type GoogleTestCommandLine(runAll, allCases:TestCase list, cases, outputPath) =
             cases |> List.filter(fun case ->
                         not(suitesRunningAllTests |> List.exists (fun i -> i = (case |> testSuiteNameFromCase))))
         String.JoinBy(":", fqn, casesNotHavingCommonSuite)
-    let outputPathParameter = sprintf "--gtest_output=\"xml:%s\"" outputPath
+    let outputPathParameter = sprintf "--gtest_output=\"xml:%s\" --gtest_catch_exceptions=0 --gmock_verbose=error" outputPath
     let filterParameter =
         if runAll then ""
         else sprintf "--gtest_filter=%s%s" filterForSuitesRunningAllTests filterForSuitesRunningIndividualTests

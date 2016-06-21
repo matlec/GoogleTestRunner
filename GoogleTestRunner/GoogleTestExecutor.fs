@@ -23,9 +23,23 @@ type GoogleTestExecutor() =
             Process.GetProcessById(framework.LaunchProcessWithDebuggerAttached(executable, wd, arguments, null)).WaitForExit();
         else
             framework.SendMessage(TestMessageLevel.Informational, sprintf "In %s, running: %s  %s" wd executable arguments)
-            ProcessUtil.runCommand wd executable arguments |> ignore
+            ProcessUtil.runCommand wd executable arguments framework |> ignore
         let results = ResultParser.getResults framework outputPath cases
         results |> List.iter framework.RecordResult
+
+        let outcomes = results |> Array.ofSeq |> Array.map (fun result -> (result.TestCase, result.Outcome)) |> List.ofArray
+        outcomes |> List.iter framework.RecordEnd
+
+    let runTests allCases (cases : IEnumerable<TestCase>) (runContext : IRunContext) (framework : IFrameworkHandle) runAll =
+        let cases = cases |> Seq.groupBy(fun c -> c.Source) |> List.ofSeq
+        for executable, cases in cases do
+            if not(cancelled) then
+                try
+                    runOnce framework runContext allCases (cases |> List.ofSeq) executable runAll
+                with e ->
+                    framework.SendMessage(TestMessageLevel.Error, e.Message)
+                    framework.SendMessage(TestMessageLevel.Error, e.StackTrace)
+
 
     let runTests allCases (cases : IEnumerable<TestCase>) (runContext : IRunContext) (framework : IFrameworkHandle) runAll =
         let cases = cases |> Seq.groupBy(fun c -> c.Source) |> List.ofSeq
