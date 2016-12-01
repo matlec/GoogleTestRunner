@@ -13,7 +13,7 @@ type ProcessUtil() =
                 streamContent
             else
                 let line = stream.ReadLine()
-                if logger <> null then
+                if logger <> null && line <> null && line.Length > 0 then
                     logger.SendMessage(TestMessageLevel.Informational, line)
                 readTheStreamInner stream ret (line :: streamContent)
         List.rev(readTheStreamInner stream ret [])
